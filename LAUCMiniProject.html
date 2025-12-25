@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <style>
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f7f7f7;
+    color: #222;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: #eeeeee;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .card h2 {
+    margin-top: 0;
+    padding-bottom: 6px;
+    position: relative;
+  }
+
+  .card h2::after {
+    content: "";
+    width: 40px;
+    height: 3px;
+    background: #888;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    border-radius: 3px;
+  }
+
+  input {
+    width: 100%;
+    max-width: 420px;
+    padding: 8px;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+  }
+
+  button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background: #444;
+    color: white;
+    cursor: pointer;
+  }
+
+  canvas {
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+</style>
+  <meta charset="UTF-8" />
+  <title>Displacement, Velocity & Acceleration Graphs</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<h1>Displacement, Velocity & Acceleration Graphs</h1>
+<div class="card">
+  <h2>Project Information</h2>
+
+  <p><b>College Name:</b><br>
+     Pimpri Chinchwad College of Engineering
+  </p>
+
+  <p><b>College Address:</b><br>
+     Sector-26, Pradhikaran, Nigdi, Pune – 411 044
+  </p>
+
+  <p><b>Department / Branch:</b><br>
+     Applied Science and Humanities
+  </p>
+
+  <p><b>Division:</b><br>
+     Division I (Civil)
+  </p>
+
+  <p><b>Project / Experiment Title:</b><br>
+     <i>Virtual Laboratory: Displacement, Velocity & Acceleration Graphs</i>
+  </p>
+
+  <p><b>Course / Subject:</b><br>
+     Linear Algebra & Univariate Calculus (LAUC) Laboratory – Mini Project
+  </p>
+
+  <p><b>Submitted By:</b><br>
+     Parth Girish Parmar — PRN: 125B1A023<br>
+     Parv Jitesh Rathod — PRN: 125B1A016
+  </p>
+
+  <p><b>Academic Year:</b><br>
+     2025–2026
+  </p>
+</div>
+<div class="card">
+  <h2>Aim</h2>
+  <p>
+    To study the graphical relationship between displacement–time,
+    velocity–time and acceleration–time using given velocity–time data.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Theory</h2>
+  <ul>
+    <li><b>Velocity–Time Graph:</b> Slope gives acceleration.</li>
+    <li><b>Acceleration–Time Graph:</b> Shows rate of change of velocity.</li>
+    <li><b>Displacement–Time Graph:</b> Area under v–t graph gives displacement.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Formulae Used</h2>
+  <ul>
+    <li>v = ds / dt</li>
+    <li>a = dv / dt</li>
+    <li>a = (v₂ − v₁) / (t₂ − t₁)</li>
+    <li>s = ∫ v dt</li>
+    <li>s = Σ (v₁ + v₂)/2 × Δt</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Interactive Motion Analyzer</h2>
+
+  <label>Time (s, comma separated):</label>
+  <input id="timeInput" type="text" value="0,1,2,3,4,5,6,7">
+<br>
+  <label>Velocity (m/s, comma separated):</label>
+  <input id="velInput" type="text" value="0,3,4,4,6,9,2,10">
+
+  <button onclick="updateGraphs()">🚀 Analyze Motion</button>
+</div>
+<div class="card">
+  <h2>Observation Table</h2>
+
+  <table border="1" width="100%" cellpadding="8" style="border-collapse:collapse; text-align:center;">
+    <thead style="background:#ddd;">
+      <tr>
+        <th>Sr. No.</th>
+        <th>Time (s)</th>
+        <th>Velocity (m/s)</th>
+        <th>Acceleration (m/s²)</th>
+        <th>Displacement (m)</th>
+      </tr>
+    </thead>
+    <tbody id="dataTable">
+    </tbody>
+  </table>
+</div>
+<canvas id="stChart" width="600" height="220"></canvas>
+<canvas id="vtChart" width="600" height="220"></canvas>
+<canvas id="atChart" width="600" height="220"></canvas>
+  <script>
+    const ctxST = document.getElementById('stChart').getContext('2d');
+    const ctxVT = document.getElementById('vtChart').getContext('2d');
+    const ctxAT = document.getElementById('atChart').getContext('2d');
+
+   let stChart = new Chart(ctxST, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Displacement (m)',
+      data: [],
+      borderColor: 'green',
+      borderWidth: 2,
+      fill: false,
+      tension: 0,
+      radius: 0
+    }]
+  },
+  options: {
+    scales: {
+      x: {
+        title: { display: true, text: '{[Time (s)] × 10}' },
+        ticks: {
+          stepSize: 1,
+          callback: function(value, index, ticks) {
+            if (Number.isInteger(value)) {
+              return value;   // show only 0,1,2,...
+            }
+            return '';        // hide fractional labels
+          }
+        }
+      },
+      y: {
+        title: { display: true, text: 'Displacement (m)' }
+      }
+    },
+    elements: {
+      point: { radius: 0 }
+    }
+  }
+});
+
+    let vtChart = new Chart(ctxVT, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Velocity (m/s)',
+          data: [],
+          borderColor: 'blue',
+          borderWidth: 2,
+          fill: false,
+          tension: 0
+        }]
+      },
+      options: {
+        scales: {
+          x: { title: { display: true, text: 'Time (s)' } },
+          y: { title: { display: true, text: 'Velocity (m/s)' } }
+        }
+      }
+    });
+
+    let atChart = new Chart(ctxAT, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Acceleration (m/s²)',
+          data: [],
+          borderColor: 'red',
+          borderWidth: 2,
+          fill: false,
+          tension: 0,
+          stepped: true
+        }]
+      },
+      options: {
+        scales: {
+          x: { title: { display: true, text: 'Time (s)' } },
+          y: { title: { display: true, text: 'Acceleration (m/s²)' } }
+        }
+      }
+    });
+
+    // Linear interpolation of velocity at time t
+    function interpVelocity(t, timeArr, velArr) {
+      if (t <= timeArr[0]) return velArr[0];
+      if (t >= timeArr[timeArr.length - 1]) return velArr[velArr.length - 1];
+
+      for (let i = 0; i < timeArr.length - 1; i++) {
+        const t0 = timeArr[i];
+        const t1 = timeArr[i+1];
+        if (t >= t0 && t <= t1) {
+          const v0 = velArr[i];
+          const v1 = velArr[i+1];
+          const ratio = (t - t0) / (t1 - t0);
+          return v0 + (v1 - v0) * ratio;   // linear interpolation [web:51][web:56]
+        }
+      }
+      return 0;
+    }
+
+    function updateGraphs() {
+      const tStr = document.getElementById('timeInput').value;
+      const vStr = document.getElementById('velInput').value;
+
+      const time = tStr.split(',').map(s => Number(s.trim()));
+      const velocity = vStr.split(',').map(s => Number(s.trim()));
+
+      if (time.length !== velocity.length || time.length < 2) {
+        alert('Need at least 2 points with matching time/velocity arrays.');
+        return;
+      }
+
+      // Velocity–time graph (original points)
+      vtChart.data.labels = time;
+      vtChart.data.datasets[0].data = velocity;
+      vtChart.update();
+
+      // Acceleration (piecewise constant using Δv/Δt)
+      const accel = [];
+      const accelTime = [];
+      for (let i = 0; i < time.length - 1; i++) {
+        const dt = time[i+1] - time[i];
+        let a = 0;
+        if (dt !== 0) a = (velocity[i+1] - velocity[i]) / dt;
+        accelTime.push(time[i]);
+        accel.push(a);
+      }
+      accelTime.push(time[time.length - 1]);
+      accel.push(accel[accel.length - 1]);
+      atChart.data.labels = accelTime;
+      atChart.data.datasets[0].data = accel;
+      atChart.update();
+
+      // Fine sampling for displacement to get smooth (parabolic-like) curve
+      const dtFine = 0.1;  // smaller step → smoother curve [web:59][web:63]
+      const tStart = time[0];
+      const tEnd = time[time.length - 1];
+
+      const fineTime = [];
+      const disp = [];
+      let s = 0;
+      let tPrev = tStart;
+      let vPrev = interpVelocity(tPrev, time, velocity);
+
+      fineTime.push(tPrev);
+      disp.push(s);
+
+      for (let t = tStart + dtFine; t <= tEnd + 1e-9; t += dtFine) {
+        const vCurr = interpVelocity(t, time, velocity);
+        const dt = t - tPrev;
+        // trapezoidal rule on small interval [tPrev, t] [web:59][web:60]
+        s += 0.5 * (vPrev + vCurr) * dt;
+        fineTime.push(t);
+        disp.push(s);
+        tPrev = t;
+        vPrev = vCurr;
+      }
+
+      stChart.data.labels = fineTime;
+      stChart.data.datasets[0].data = disp;
+      stChart.update();
+// Prepare displacement values at input times (for table)
+const dispAtInputTimes = [];
+let sTable = 0;
+
+for (let i = 0; i < time.length - 1; i++) {
+  const dt = time[i+1] - time[i];
+  sTable += 0.5 * (velocity[i] + velocity[i+1]) * dt;
+  dispAtInputTimes.push(sTable);
+}
+dispAtInputTimes.unshift(0); // displacement at t=0
+
+updateTable(time, velocity, accel, dispAtInputTimes);
+    }
+
+    updateGraphs();
+function updateTable(time, velocity, accel, displacement) {
+  const tableBody = document.getElementById("dataTable");
+  tableBody.innerHTML = "";
+
+  for (let i = 0; i < time.length; i++) {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${time[i]}</td>
+      <td>${velocity[i]}</td>
+      <td>${accel[i] !== undefined ? accel[i].toFixed(2) : "-"}</td>
+      <td>${displacement[i] !== undefined ? displacement[i].toFixed(2) : "-"}</td>
+    `;
+
+    tableBody.appendChild(row);
+  }
+}
+  </script>
+</body>
+</html>
